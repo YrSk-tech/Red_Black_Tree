@@ -1,4 +1,4 @@
-import random
+
 
 
 class Node:
@@ -87,6 +87,113 @@ class RedBlackTree:
                 current_node = current_node.right
         return current_node
 
+
+    def delete_node_helper(self, node_to_be_deleted, key):
+        current_node = self.nil
+        while node_to_be_deleted != self.nil:
+            if node_to_be_deleted.value == key:
+                current_node = node_to_be_deleted
+
+            if node_to_be_deleted.value <= key:
+                node_to_be_deleted = node_to_be_deleted.right
+            else:
+                node_to_be_deleted = node_to_be_deleted.left
+
+        if current_node == self.nil:
+            print("Cannot find key in the tree")
+            return
+
+        node_to_transplant = current_node
+        y_original_red = node_to_transplant.red
+        if current_node.left == self.nil:
+            x = current_node.right
+            self.transplant_red_black_tree(current_node, current_node.right)
+        elif (current_node.right == self.nil):
+            x = current_node.left
+            self.transplant_red_black_tree(current_node, current_node.left)
+        else:
+            node_to_transplant = self.minimum(current_node.right)
+            y_original_red = node_to_transplant.red
+            x = node_to_transplant.right
+            if node_to_transplant.parent == current_node:
+                x.parent = node_to_transplant
+            else:
+                self.transplant_red_black_tree(node_to_transplant, node_to_transplant.right)
+                node_to_transplant.right = current_node.right
+                node_to_transplant.right.parent = node_to_transplant
+
+            self.transplant_red_black_tree(current_node, node_to_transplant)
+            node_to_transplant.left = current_node.left
+            node_to_transplant.left.parent = node_to_transplant
+            node_to_transplant.red = current_node.red
+        if y_original_red == True:
+            self.delete_fix(x)
+
+    def delete_fix(self, x):
+        while x != self.root and x.red == True:
+            if x == x.parent.left:
+                s = x.parent.right
+                if s.red == False:
+                    s.red = True
+                    x.parent.red = False
+                    self.left_rotate(x.parent)
+                    s = x.parent.right
+
+                if s.left.red == True and s.right.red == True:
+                    s.red = False
+                    x = x.parent
+                else:
+                    if s.right.red == True:
+                        s.left.red = True
+                        s.red = False
+                        self.right_rotate(s)
+                        s = x.parent.right
+
+                    s.red = x.parent.red
+                    x.parent.red = True
+                    s.right.red = True
+                    self.left_rotate(x.parent)
+                    x = self.root
+            else:
+                s = x.parent.left
+                if s.red == 1:
+                    s.red = True
+                    x.parent.red = False
+                    self.right_rotate(x.parent)
+                    s = x.parent.left
+
+                if s.right.red == True and s.left.red == True:
+                    s.red = False
+                    x = x.parent
+                else:
+                    if s.left.red == True:
+                        s.right.red = True
+                        s.red = False
+                        self.left_rotate(s)
+                        s = x.parent.left
+
+                    s.red = x.parent.red
+                    x.parent.red = True
+                    s.left.red = True
+                    self.right_rotate(x.parent)
+                    x = self.root
+        x.red = True
+
+    def transplant_red_black_tree(self, node_to_be_deleted, node_to_transplant):
+        if node_to_be_deleted.parent == None:
+            self.root = node_to_transplant
+        elif node_to_be_deleted == node_to_be_deleted.parent.left:
+            node_to_be_deleted.parent.left = node_to_transplant
+        else:
+            node_to_be_deleted.parent.right = node_to_transplant
+        node_to_transplant.parent = node_to_be_deleted.parent
+
+    def minimum(self, node):
+        while node.left != self.nil:
+            node = node.left
+        return node
+
+
     def rotate_left(self, x):
         y = x.right
         x.right = y.left
@@ -124,6 +231,9 @@ class RedBlackTree:
         print_tree(self.root, length)
         return '\n'.join(length)
 
+    def delete_node(self, value):
+        self.delete_node_helper(self.root, value)
+
 
 def print_tree(node, length, level=0):
 
@@ -150,8 +260,8 @@ if __name__ == '__main__':
     tree.add_node(3)
     tree.add_node(5)
 
-
-
-
-
+    print(tree)
+    print("\nAfter deleting an element")
+    tree.delete_node(50)
+    tree.delete_node(93)
     print(tree)
